@@ -1,0 +1,211 @@
+Analyzing the possibility for a private key QR code..
+
+Using an image of 4x4 size bits
+
+(164^2) / (4^2) = 1681 bits
+
+# flames...
+152 * 3 = 456
+152 * 4 = 608
+152 * 5 = 760
+
+sqrt(1681) = 41 <- version 6 QR code, 608 bits for quality Q...
+however, from the examples given, I know these generators are using
+quality H with version 6
+
+... we have 608 bits from 152 hex characters
+http://www.qrcode.com/en/about/version.html
+
+Quality Q has how many error correcting and data blocks?
+
+Wait, it doesn't quite add up. It's an interesting theory, but...
+We can hold 608 data bits at Q, but what about the error correcting bits?
+
+6 Q
+608 <- data bits
+178 <- numeric
+108 <- alphanumeric
+74  <- binary
+
+- Pick the encoding method, and the error correction level
+
+- If this is the right path, then the private key WIF or hex was most likely encoded in binary, and then the resultant data bits were read off and recorded. (BUT it's also possible that the decimal value was encoded in numeric, or the hex value [with uppercase letters] was encoded in alphanumeric).
+Source: http://www.thonky.com/qr-code-tutorial/data-analysis
+- They could have used error correction quality H like the standard, but.. are they trying to store 64 hex values in byte format? seems a little strange. could use quality H and encode hex in alphanum
+- The WIF could also be stored in quality H without loss of data. but it doesn't give us 608 data bits.
+
+SOURCE for the next few things: http://www.thonky.com/qr-code-tutorial/data-encoding
+- Pick the Mode Indicator
+Numeric Mode	0001
+Alphanumeric Mode	0010
+Byte Mode	0100
+
+- Pick the character count indicator (left padded with 0s)
+SIZE OF THE CHARACTER COUNT
+Numeric mode: 10 bits
+Alphanumeric mode: 9 bits
+Byte mode: 8 bits
+Japanese mode: 8 bits
+
+# of characters allowed in various char. encoding for 6Q:
+Numeric: 178, Alphanumeric: 108, Byte: 74
+
+"Put this after the mode indicator from step 3 to get the following bit string: 0010 000001011"
+
+- NOW encode the data. This is a pita. See step 3: http://www.thonky.com/qr-code-tutorial/data-encoding
+
+- So, apparently we also pad right-hand zeroes and then use a mask.
+- I'm guessing the mask is included in the flames since I'm not seeing the 16-bit duplicated string at the end of the flames. OR the interleaving hides it.
+
+... some shit later after calculating Reed-Solomon error correcting codes, converting everything to decimal, and then interleaving the blocks...
+
+- "Put Interleaved Error Correction Codewords After Interleaved Data Codewords"
+Source: http://www.thonky.com/qr-code-tutorial/structure-final-message
+
+- Version 6 has 7 required remainder bits (zeroes)
+- if we read the flames, ending at the top-left, then we might have found the 7 remainder bits, since the first two flames only differ by one bit. this assumes that the mask isn't applied. if it is applied, then.. that changes things.
+
+To check:
+(A) mode and character counts are in the first block, first & second codewords, which would be in the 1st and 5th positions (due to 4-block, 1 group interleaving for both Q and H qualities in v.6)
+(B) Last 7 bits are 0s
+(C) Depending on our assumed mode, we'll have a certain number of characters filled in, THEN a terminator, THEN padding to offset to a multiple of 8, followed by 11101100 00010001 (236 and 17) over and over. Because of interleaving, these will.. interleave. which means patters in the flames after the data is encoded. I'm not really seeing that, though. But there are some sections where it looks like patterns emerge, especially near the bottom right corner.
+
+
+It seems a little strange that a mask would be applied before we'd retrieve the data back. The mask is applied to the QR matrix itself - so we'd have to read back the data bits after the mask is applied. It helps to make the flames harder to decipher, though. But now I feel like I'm stretching this theory a bit thin.
+
+
+6-Q: {4, 43, 19}, 43 <- total, 19 <- data
+19 data blocks of 8 bits/block = 152 bits
+this doesn't match. 152 bits? yeah, I did something wrong.
+Oh, no, it makes sense. 4 sets of blocks => 608 data bits.
+
+
+Okay, so.. now on to checking things. If we stored things as 6-Q like I suspect..
+- Is it from the binary string? no.
+- Is it from the hex interpretation? possibly - either alnum or byte
+- Is it from the decimal interpretation? possibly - either num, alnum, or byte
+- Is it from the private WIF interpretation? possibyly - only byte
+- there is also some other.. wif format. I forget at the moment. I'll have to find it again if it's important.
+
+Encoding methods:
+
+numeric - To encode a string of digits in numeric mode, first split the string into groups of three digits. If the string's length is not a multiple of 3, the final group of digits will have to be only one or two numbers long. (http://www.thonky.com/qr-code-tutorial/numeric-mode-encoding)
+-- 10 bits per 3 characters, plus however many for the remainder.
+
+alphanumeric - First, break up the string into pairs of characters: HE, LL, O , WO, RL, D; For each pair of characters, get the number representation (from the alphanumeric table) of the first character and multiply it by 45.(http://www.thonky.com/qr-code-tutorial/alphanumeric-mode-encoding)
+-- 11 bits per 2 characters, plus 6 bits if there is a remainder.
+
+byte - 8 bits per, simple enough. use ISO-w/e or UTF8 encoding for bit values.
+
+If hex, we have 64 hex characters (or 66 in compressed key):
+- alnum: 64 * 11/2 = 352 bits
+- byte: 64 * 8 = 512 bits
+
+If decimal, we have between... X and Y characters, around 77ish:
+- numeric: 77 * 10/3 = 256 + "2/3 more bits" (depends on the binary value of the remaining digits)
+- alnum: 77 * 11/2 = 423 + 6 bits
+- byte: ~77 * 8 = 616 <- TOO LARGE. Decimal in B can be at most 74 in length (two bytes for data)
+
+If WIF, we have 52 base 58 characters, starting with K or L:
+- byte: 52 * 8 = 416
+
+
+Okay, so all of the above require 4 termination bits, plus extra padding to wrap it to a byte. THEN the extra padding - 0xEC and 0x11.
+
+
+-> mode indicator first
+Numeric = 0001
+Alphanumeric = 0010
+Byte = 0100
+
+-> then left-padded char count
+WIF (8 bits length): 00110100
+decimal (9 or 10 bits length): (guessing 77) - 01001101 <-- at the least, the first 5 or 6 bits are probably the same
+hex (8 or 9 bits length): 001000000 or 001000010 (compressed)
+
+-> then the data
+-> then the termination bits, 0 padding to make a multiple of 8
+-> then the padding bits 0xEC and 0x11
+	-> (xxxxxx) then 7 remainder bits of 0? that can't be right - this is already a multiple of 8.
+	-> the prior statement is not right. we add 7 bits after both data + error blocks concat'd
+
+*** Number of blocks: ***
+mode + char count + data + term (+ pad for 8x mult) (+ alternating pad)
+	hex/alnum: 4 + 9 + 352 + 4 + 7 = 376 bits => 47 blocks
+	hex/byte: 4 + 8 + 512 + 4 = 528 bits => 66 blocks
+	-- dec/num: 4 + 10 + ??
+	dec/alnum: 4 + 9 + 429 + 4 + 2 = 448 bits => 56 blocks
+	wif/byte: 4 + 8 + 416 + 4 = 432 bits => 54 blocks
+
+*** Number of alternating padding blocks: ***
+hex/alnum: 74 - 47 = 27
+hex/byte: 74 - 66 = 8
+dec/alnum: 74 - 56 = 18
+wif/byte: 74 - 54 = 20 <- 10 E's, 10 C's, 20 1s in hex
+
+-- SO now if this theory is correct, there are things I need to be able to find:
+1) the mode + char count
+2) the padding blocks (at least 8 of them)
+3) at least 20 of one specific combination due to the 1s, mostly in a row
+4) if hex, we know to either look for a K or L
+
+
+- Mask => 000, chess board marking? http://blog.qartis.com/decoding-small-qr-codes-by-hand/
+
+
+- if no mask, then WIF/byte doesn't make a lot of sense, since we'd go from..
+0100 0011 <- 3 bit differences in flames, which doesn't match the first two at the top right, unless the order is different
+
+- if there's a 000 mask => diff of 3
+11 => 10
+00 => 10
+00 => 01
+10 => 00
+
+- just as drastic a difference. except that the decimal difference for the unmasked one is 1, which could represent one change.
+
+- I had some reason for believing that the data would be encrypted in hex form. oh, the simplest QR code to encode a hex. I think I was wrong, though.
+
+- hex/binary to mask => no diff
+00 => 01
+10 => 00
+00 => 01
+10 => 00
+
+- I personally don't think we'd encode this in alphanumeric, but it makes sense for a hex
+
+- hex/alnum to mask => no diff
+01 => 00
+00 => 10
+01 => 00
+00 => 10
+
+
+
+wif/bin, assuming starting only inner, with sllsls as the start:
+00 => 01
+10 => 00
+11 => 10
+00 => 10
+00 => 01
+10 => 00
+
+
+
+What if it is a QR code, but the message isn't a private key? or hidden somewhere inside of it? changes the length theory of mine.
+
+I could write something to construct all of the QR code patterns, then read off the bits for each iteration (with and without masking), and see if any messages show.
+
+- different starting places (assuming intermingled, 152. otherwise 98 * 54)
+- intermingled in & out or separate (2)
+- all different permutations of bits -> 16 different permutations for each variation of hex (16)
+- lastly, could choose masks. but probably best to let the QR generator decide when we apply. but also check without a mask. (2)
+
+- worst case: 98 * 54 * 2 * 16 * 2 = over 300k
+- second worst: 152 * 2 * 16 * 2 = 9,728
+
+- actually, these are upper bounds - we still need our first hex to be 1000, 0100, 0010, 0001 - so the other options are immediately written off, depending on our permutation.
+- it's worth a shot.
+
+to encode: just feed data bits directly
+to decode: read off each index one at a time, but need to follow the rules of decoding.. or is there some kind of decoding library I can use?

@@ -1,0 +1,22 @@
+steghide, jphide/seek, camouflage... just a few examples of different ways to hide files within JPGs, BMPs, and audio files. They don't necessarily interoperate, so to test extracting data from any of them, you kinda have to test all of them. And if there's a password, may need to brute force it.
+
+The larger the file encrypted, the more distortion and statistical variation in an image.
+
+Sources:
+http://www.unfiction.com/dev/tutorial/steg.html
+http://www.jjtc.com/Steganography/tools.html
+https://futureboy.us/stegano/
+https://scottlinux.com/2014/08/12/steganography-in-linux-from-the-command-line/
+
+How to use steghide
+steghide extract -sf OSpEZtA.jpg -p ""
+
+Word lists:
+- /usr/share/dict/american-english
+- /usr/share/dict/cracklib-small 
+
+Check the word lists:
+python steg_brute.py -b -d ../dictionaries/american-english.txt -f ../OSpEZtA.jpg;
+python steg_brute.py -b -d ../dictionaries/cracklib-small.txt -f ../OSpEZtA.jpg;
+python steg_brute.py -b -d ../dictionaries/rockyou.txt -f ../OSpEZtA.jpg;
+python steg_brute.py -b -d ../dictionaries/words.txt -f ../OSpEZtA.jpg;

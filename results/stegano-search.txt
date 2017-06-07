@@ -1,0 +1,15 @@
+Search the files for steganography - hidden files 
+
+Check the word lists:
+
+	python steg_brute.py -b -d ../dictionaries/american-english.txt -f ../OSpEZtA.jpg;
+		- Nothing
+
+	python steg_brute.py -b -d ../dictionaries/cracklib-small.txt -f ../OSpEZtA.jpg;
+		- Nothing
+
+	python steg_brute.py -b -d ../dictionaries/rockyou.txt -f ../OSpEZtA.jpg;
+		- Incomplete
+
+	python steg_brute.py -b -d ../dictionaries/words.txt -f ../OSpEZtA.jpg;
+		- Incomplete

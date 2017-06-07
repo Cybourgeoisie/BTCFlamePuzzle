@@ -1,0 +1,56 @@
+		inner	outer
+top 	28		18
+right	24		12
+bottom	33		16
+left	13		8
+total	98		54
+
+152 colored flames, not including orange+white
+40? orange+white flames,
+192 total?
+
+orange flames:
+	15 on left
+	9, 10, 11, 12 on bottom
+	12 on right
+	6 on top
+or
+	4 on top
+	10 on right
+	9 on bottom
+	15 on left
+
+38 to 42, as many as 45 orange flames.
+
+
+
+
+
+256-192 = 64, but if I miscounted... could be 41.
+Which leaves 63 = 9*7, like the chess squares
+
+17 leaves
+
+--
+
+Obsevations:
+- Short and long flames
+- Two different outer colors (red/orange, yellow/white)
+- Two different inner colors (purple/dark blue, green/dark green)
+
+- 2^3 options there, which could be 3 bits.
+
+Might also be a relationship between "fatter" and "thinner" inner flames
+- Seems negligible at first, but there is additional orange or yellow "pushing in" the inner flames to thin them out - kinda looks like 0s and 1s
+
+There also might be an order given between the inner and outer flames. Maybe the tips / lean give a total order. Also, maybe the inner / outer could be another bit distinction, since the inner flames have no gaps, but the outer flames have a lot of gaps filled with orange/white. Or we could just be going through the inner first, then the outer. But the way that they're drawn makes me think that either the outer are meant to "fit" in order with the inner, or they're just separate entirely.
+
+I suspect that the orange/white flames don't mean anything. Those flames don't follow the same patterns as the others, and they only appear among the outer, sort of "filling the gaps".
+
+But even with thinner / fatter, and inner/outer, we only have 2^5 bits
+
+How "curvy" a flame is, s-curve or c-curve? The direction that the tip points? Or direction of the curve.
+
+Some of the flames have a "jut" of yellow or orange poking through the center, but it's not a common pattern. Unlikely that it encodes something.
+
+If I can find 4 bits to work with, each flame could represent a hex character. Need 64 for a private key.

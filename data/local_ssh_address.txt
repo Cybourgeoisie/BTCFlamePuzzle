@@ -1,0 +1,8 @@
+away from home:
+ssh -p 52122 ben@98.235.90.60
+
+at home:
+ssh -p 52122 ben@10.0.0.8
+
+IPv6:
+2601:98a:4100:c812:fd76:e538:4077:80fb

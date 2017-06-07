@@ -1,0 +1,25 @@
+The bitcoin address, 1FLAMEN6rq2BqMnkUmsJBqCGWdwgVKcegd, is a compressed bitcoin address (34 characters).
+
+This means that we can be looking for...
+- 256 bits of a private key in raw bits
+- 64 hex characters of a private key (from the raw bits)
+- 66 hex characters of a "compressed" private key (from raw bits), 01 suffix (* same as 64-hex, save suffix)
+- 77ish (give or take a few) decimal characters of the private key (from raw bits)
+- 52 Base58 characters of Compressed Private Key WIF, starting with K or L
+- (is it possible we could be looking for X-Y coords of a public key? almost certainly not)
+- A set number of characters in a different base
+
+What we're probably not looking for
+- 51 Base58 characters of Private Key WIF, starting with a 5
+- (really unlikely) 12 to 24 words of an HD or deterministic seed
+
+Initial Theories:
+- Check all bases and numbers of characters
+- Some kind of cipher rotation on the bits
+- Maybe not a mono-whatever cipher, but poly -> each letter is mapped to a different letter by some offset
+
+QR Code Theory:
+- 152 flames, if hex encoded, yield 608 data bits for QR version 6, quality Q
+- If 41 "orange" flames in border, and 17 leaves => (41-17)/4 = 6 <- same QR version
+- If converted to QR, would need to find 5 bits for format info <- encoding level, and data mask
+- The chess board in the background could be showing the data mask 000 => flip if ((i+j)%2 == 0)
