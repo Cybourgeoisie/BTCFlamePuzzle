@@ -632,6 +632,7 @@ var qrcode = function() {
 
   qrcode.stringToBytesFuncs = {
     'default' : function(s) {
+      //console.log('using default');
       var bytes = [];
       for (var i = 0; i < s.length; i += 1) {
         var c = s.charCodeAt(i);
@@ -2204,6 +2205,7 @@ var qrcode = function() {
   qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
     // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
     function toUTF8Array(str) {
+      //console.log('using toUTF8Array');
       var utf8 = [];
       for (var i=0; i < str.length; i++) {
         var charcode = str.charCodeAt(i);

@@ -1,0 +1,4 @@
+while working on the decred puzzle, it occured to me that the fat or thin flames could be "yes, look at this flame". found no numbers that stuck out from comparison, but I recall that the inner/outer and tall/short flames are variable - 98 inner compared to 54 outer, and 93 long to 59 short. The colors and "fatness"/"thinness" are almost equally distributed, which gives a suggestion of randomness.
+
+Finding: there are 63 pairs of "i","l", which could be significant, as there are 63 chess squares. However, it's only significant if I can make usable data. There are only 3 bits of information left. So it's probably a dead end.
+

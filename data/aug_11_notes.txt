@@ -1,0 +1,21 @@
+You can fit 58 or 62 combinations into 6 bits => 2^6 = 64.
+
+We have between 3 and 5 bits given by the flames. Inner color, outer color, height, thickness, border alignment. A sixth, potentially, by the side a flame is on. Maybe something else I haven't seen.
+
+The six ribbons indicate up to 64 values. It could be the cipher key.
+
+But it's not enough. Side? Like.. top/bottom or left/right? That could be bits 6 and 7. It also means that the bit is set for a lot of flames in a row. Is there something else?
+
+And 152 flames? For 1 through 8 options, that's...
+
+1 -> 152
+2 -> 304
+3 -> 456
+4 -> 608
+5 -> 760
+6 -> 912
+7 -> 1064
+8 -> 1216
+
+Strange numbers to play with.
+

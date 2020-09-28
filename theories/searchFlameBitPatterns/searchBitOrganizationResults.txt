@@ -1,0 +1,70 @@
+1: Statistics on all flames
+Count: 152
+{ length: { tall: 93, short: 59 },
+  width: { fat: 75, thin: 77 },
+  inner: { green: 75, purple: 77 },
+  outer: { red: 78, yellow: 74 } }
+
+
+2: Statistics on inner flames
+Count: 98
+{ length: { tall: 63, short: 35 },
+  width: { fat: 45, thin: 53 },
+  inner: { green: 51, purple: 47 },
+  outer: { red: 50, yellow: 48 } }
+
+
+3: Statistics on outer flames
+Count: 54
+{ length: { tall: 30, short: 24 },
+  width: { fat: 30, thin: 24 },
+  inner: { green: 24, purple: 30 },
+  outer: { red: 28, yellow: 26 } }
+
+
+4: Statistics on inner flames, every other flame (odd)
+Count: 49
+{ length: { tall: 32, short: 17 },
+  width: { fat: 18, thin: 31 },
+  inner: { green: 24, purple: 25 },
+  outer: { red: 24, yellow: 25 } }
+
+
+5: Statistics on inner flames, every other flame (even)
+Count: 49
+{ length: { tall: 31, short: 18 },
+  width: { fat: 27, thin: 22 },
+  inner: { green: 27, purple: 22 },
+  outer: { red: 26, yellow: 23 } }
+
+
+6: Statistics on outer flames, every other flame (odd)
+Count: 27
+{ length: { tall: 12, short: 15 },
+  width: { fat: 15, thin: 12 },
+  inner: { green: 12, purple: 15 },
+  outer: { red: 12, yellow: 15 } }
+
+
+7: Statistics on outer flames, every other flame (even)
+Count: 27
+{ length: { tall: 18, short: 9 },
+  width: { fat: 15, thin: 12 },
+  inner: { green: 12, purple: 15 },
+  outer: { red: 16, yellow: 11 } }
+
+
+8: Statistics on all flames, every other flame (odd)
+Count: 76
+{ length: { tall: 48, short: 28 },
+  width: { fat: 36, thin: 40 },
+  inner: { green: 40, purple: 36 },
+  outer: { red: 37, yellow: 39 } }
+
+
+9: Statistics on all flames, every other flame (even)
+Count: 76
+{ length: { tall: 45, short: 31 },
+  width: { fat: 39, thin: 37 },
+  inner: { green: 35, purple: 41 },
+  outer: { red: 41, yellow: 35 } }

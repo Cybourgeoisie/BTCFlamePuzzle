@@ -2,6 +2,8 @@
  * Pull the values from the excel sheet, hold in an iterable
  **/
 
+var CoinKey = require('coinkey');
+var ci = require('coininfo');
 const XLSX = require('xlsx');
 
 // read the file
@@ -40,7 +42,7 @@ function collectFlames(bIncludeFlameLeaf, bSingle)
 			jsws[i].outer_color, jsws[i].inner_color, jsws[i].width.charAt(0)]);
 
 		flames_single_array.push([jsws[i].border, jsws[i].len.charAt(0), 
-			jsws[i].outer_color, jsws[i].inner_color, jsws[i].width.charAt(0)]);
+			jsws[i].outer_color, jsws[i].inner_color, jsws[i].width.charAt(0), jsws[i].side]);
 	}
 
 	if (!!bSingle)
@@ -55,16 +57,20 @@ var flames_array_with_extra = collectFlames(true, false);
 var flames_array = collectFlames(false, false);
 var flames_single_array = collectFlames(false, true);
 
-function getFlames(bIncludeFlameLeaf)
+function getFlames(bIncludeFlameLeaf, bSingleArray)
 {
 	if (!!bIncludeFlameLeaf) {
 		return flames_array_with_extra;
 	}
 
+	if (!!bSingleArray) {
+		return flames_single_array;
+	}
+
 	return flames_array;
 }
 
-function getFlamesHex(start_pos, order, bits)
+function getFlamesHex(start_pos, order, bits, reverse, b_inner, b_outer)
 {
 	var fsa = flames_single_array;
 	var hexes = [];
@@ -72,10 +78,56 @@ function getFlamesHex(start_pos, order, bits)
 	var o = order ? order : [3,2,1,0];
 	var b = bits  ? bits : ['i', 'l', 'y', 'g', 'f'];
 
+	if (b_inner == null) b_inner = true;
+	if (b_outer == null) b_outer = true;
+	if (!b_outer && !b_inner) throw "Invalid settings: b_inner and/or b_outer must be true";
+
 	var count = 0;
 	var end_limit = fsa.length;
 
-	var i = start_pos ? start_pos : 0;
+	// Find the starting point
+	var i = 0, current_i = 0;
+
+	if (start_pos != null && typeof start_pos == 'number' && start_pos >= 0 && start_pos <= end_limit)
+	{
+		while (current_i != start_pos) {
+			if ((b_inner && fsa[i][0] == 'i') || (b_outer && fsa[i][0] == 'o')) {
+				current_i++;
+			}
+			i++;
+		}
+	}
+	else if (start_pos != null && typeof start_pos == 'string' && 
+		(start_pos == 'top' || start_pos == 'bottom' || start_pos == 'left' || start_pos == 'right'))
+	{
+		// Start at beginning or end
+		if (reverse)
+			i = end_limit - 1;
+		else
+			i = 0;
+
+		// Pick a side - we'll numerically hardcode these
+		if (b_inner && !b_outer) {
+			while (!(fsa[i][5] == start_pos && fsa[i][0] == 'i')) {
+				if (reverse) i--;
+				else i++;
+			}
+		}
+		else if (!b_inner && b_outer) {
+			while (!(fsa[i][5] == start_pos && fsa[i][0] == 'o')) {
+				if (reverse) i--;
+				else i++;
+			}
+		} else {
+			while (fsa[i][5] != start_pos) {
+				if (reverse) i--;
+				else i++;
+			}
+		}
+	}
+
+	// TODO handle reverse traversal
+
 	while (count < end_limit)
 	{
 		b_border = (fsa[i][0] == b[0]) ? 1 : 0;
@@ -85,13 +137,98 @@ function getFlamesHex(start_pos, order, bits)
 		b_width  = (fsa[i][4] == b[4]) ? 1 : 0;
 
 		var hex = (b_len << o[0]) + (b_out << o[1]) + (b_in << o[2]) + (b_width << o[3]);
-		hexes.push(hex.toString(16));
 
-		i = (i >= end_limit-1) ? 0 : i+1;
+		if ((b_inner && fsa[i][0] == 'i') || (b_outer && fsa[i][0] == 'o')) {
+			hexes.push(hex.toString(16));
+		}
+
+		if (reverse)
+		{
+			i = (i == 0) ? end_limit-1 : i-1;
+		}
+		else
+		{
+			i = (i >= end_limit-1) ? 0 : i+1;			
+		}
 		count++;
 	}
 
 	return hexes.join('');
+}
+
+function getInnerFlamesHex(opt)
+{
+	var options = {
+		'reverse' : opt.hasOwnProperty('reverse') ? opt.reverse : false,
+		'b_inner' : true,
+		'b_outer' : false,
+		'order'   : opt.hasOwnProperty('order')   ? opt.order   : null,
+		'bits'    : opt.hasOwnProperty('bits')    ? opt.bits    : null,
+		'start'   : opt.hasOwnProperty('start')   ? opt.start   : 0
+	};
+
+	return getFlamesHex(options.start, options.order, options.bits, options.reverse,
+		options.b_inner, options.b_outer);
+}
+
+function getOuterFlamesHex(opt)
+{
+	var options = {
+		'reverse' : opt.hasOwnProperty('reverse') ? opt.reverse : false,
+		'b_inner' : false,
+		'b_outer' : true,
+		'order'   : opt.hasOwnProperty('order')   ? opt.order   : null,
+		'bits'    : opt.hasOwnProperty('bits')    ? opt.bits    : null,
+		'start'   : opt.hasOwnProperty('start')   ? opt.start   : 0
+	};
+
+	return getFlamesHex(options.start, options.order, options.bits, options.reverse,
+		options.b_inner, options.b_outer);
+}
+
+function getAllBitsPatterns3Bits()
+{
+	bits_patterns = [];
+	for (var len = 0; len < 2; len++)
+		for (var outer = 0; outer < 2; outer++)
+			for (var inner = 0; inner < 2; inner++)
+				bits_patterns.push([
+					(len < 1) ? 'l' : 's', 
+					(outer < 1) ? 'r' : 'y',
+					(inner < 1) ? 'p' : 'g']);
+	return bits_patterns;
+}
+
+function permutator(inputArr) {
+  var results = [];
+
+  function permute(arr, memo) {
+    var cur, memo = memo || [];
+
+    for (var i = 0; i < arr.length; i++) {
+      cur = arr.splice(i, 1);
+      if (arr.length === 0) {
+        results.push(memo.concat(cur));
+      }
+      permute(arr.slice(), memo.concat(cur));
+      arr.splice(i, 0, cur[0]);
+    }
+
+    return results;
+  }
+
+  return permute(inputArr);
+}
+
+function testPrivateKey(pk)
+{
+	var ck = CoinKey.fromWif(pk)
+
+	ck.compressed = false;
+	console.log(ck.publicAddress)
+	ck.compressed = true;
+	console.log(ck.publicAddress)
+	console.log(ck.versions.public === ci('BTC').versions.public) // => true 
 }
 
 /**
@@ -99,5 +236,10 @@ function getFlamesHex(start_pos, order, bits)
  **/
 module.exports = {
     getFlames: getFlames,
-    getFlamesHex: getFlamesHex
+    getFlamesHex: getFlamesHex,
+    getInnerFlamesHex: getInnerFlamesHex,
+    getOuterFlamesHex: getOuterFlamesHex,
+    getAllBitsPatterns3Bits: getAllBitsPatterns3Bits,
+    permutator: permutator,
+    testPrivateKey: testPrivateKey
 };
